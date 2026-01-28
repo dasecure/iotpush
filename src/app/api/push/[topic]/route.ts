@@ -13,11 +13,6 @@ import { NextRequest, NextResponse } from "next/server";
  * - Priority: low, normal, high, urgent
  * - Tags: Comma-separated tags (e.g., "warning,sensor")
  * - Click: URL to open when notification is clicked
- * - Attach: URL of file to attach
- * 
- * Examples:
- * curl -d "Hello!" iotpush.com/api/push/my-topic
- * curl -H "Title: Alert" -d "Temp high!" iotpush.com/api/push/my-topic
  */
 
 // Mock topic storage - replace with Supabase
@@ -56,13 +51,10 @@ const messageHistory: Array<{
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { topic: string } }
+  { params }: { params: Promise<{ topic: string }> }
 ) {
   try {
-    const topic = params.topic;
-    
-    // Check if topic exists (or auto-create for free tier)
-    // In production, check user's plan and limits
+    const { topic } = await params;
     
     // Parse request
     const contentType = request.headers.get("content-type") || "";
@@ -116,13 +108,6 @@ export async function POST(
       messageHistory.pop();
     }
 
-    // TODO: In production:
-    // 1. Store message in Supabase
-    // 2. Check rate limits
-    // 3. Send to Web Push subscribers
-    // 4. Send to mobile push (FCM/APNs)
-    // 5. Forward to webhooks (Slack, Discord, email)
-
     console.log(`[iotpush] New message on topic "${topic}":`, notification);
 
     return NextResponse.json({
@@ -146,9 +131,9 @@ export async function POST(
 // GET - Retrieve recent messages for a topic (for subscribers)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { topic: string } }
+  { params }: { params: Promise<{ topic: string }> }
 ) {
-  const topic = params.topic;
+  const { topic } = await params;
   const { searchParams } = new URL(request.url);
   const since = searchParams.get("since"); // ISO timestamp
   const limit = parseInt(searchParams.get("limit") || "10");
