@@ -1,66 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase-admin";
 
 /**
  * iotpush - Push Notification API
- * 
- * Send a notification to a topic:
- * 
- * POST /api/push/{topic}
- * Body: Plain text message or JSON
- * 
+ *
+ * POST /api/push/{topic} — Send a notification
+ * GET  /api/push/{topic} — Fetch recent messages
+ *
  * Headers (optional):
- * - Title: Notification title
- * - Priority: low, normal, high, urgent
- * - Tags: Comma-separated tags (e.g., "warning,sensor")
- * - Click: URL to open when notification is clicked
+ * - Title / X-Title: Notification title
+ * - Priority / X-Priority: low, normal, high, urgent
+ * - Tags / X-Tags: Comma-separated tags
+ * - Click / X-Click: URL to open on click
+ * - Authorization: Bearer {api_key} (required for private topics)
  */
-
-// Mock topic storage - replace with Supabase
-const mockTopics: Record<string, {
-  id: string;
-  name: string;
-  userId: string;
-  isPrivate: boolean;
-  subscribers: number;
-}> = {
-  "my-topic": {
-    id: "1",
-    name: "my-topic",
-    userId: "user1",
-    isPrivate: false,
-    subscribers: 3,
-  },
-  "home-sensors": {
-    id: "2",
-    name: "home-sensors",
-    userId: "user1",
-    isPrivate: false,
-    subscribers: 1,
-  },
-};
-
-// Mock message storage
-const messageHistory: Array<{
-  id: string;
-  topic: string;
-  title?: string;
-  message: string;
-  priority: string;
-  timestamp: string;
-}> = [];
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ topic: string }> }
 ) {
   try {
-    const { topic } = await params;
-    
-    // Parse request
+    const { topic: topicName } = await params;
+    const supabase = createAdminClient();
+
+    // Look up topic by name
+    const { data: topic, error: topicError } = await supabase
+      .from("iot_topics")
+      .select("id, name, is_private, api_key")
+      .eq("name", topicName)
+      .limit(1)
+      .single();
+
+    if (topicError || !topic) {
+      return NextResponse.json(
+        { error: `Topic "${topicName}" not found. Create it in your dashboard first.` },
+        { status: 404 }
+      );
+    }
+
+    // Check auth for private topics
+    if (topic.is_private) {
+      const authHeader = request.headers.get("authorization");
+      const token = authHeader?.replace("Bearer ", "");
+      if (!token || token !== topic.api_key) {
+        return NextResponse.json(
+          { error: "This topic is private. Provide a valid API key via Authorization: Bearer {key}" },
+          { status: 401 }
+        );
+      }
+    }
+
+    // Parse request body
     const contentType = request.headers.get("content-type") || "";
     let message: string;
     let jsonData: Record<string, unknown> = {};
-    
+
     if (contentType.includes("application/json")) {
       jsonData = await request.json();
       message = (jsonData.message as string) || JSON.stringify(jsonData);
@@ -69,90 +63,115 @@ export async function POST(
     }
 
     if (!message || message.trim() === "") {
-      return NextResponse.json(
-        { error: "Message cannot be empty" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
     }
 
-    // Extract optional headers
-    const title = request.headers.get("title") || request.headers.get("x-title") || (jsonData.title as string);
+    // Extract optional headers / JSON fields
+    const title = request.headers.get("title") || request.headers.get("x-title") || (jsonData.title as string) || null;
     const priority = request.headers.get("priority") || request.headers.get("x-priority") || (jsonData.priority as string) || "normal";
-    const tags = request.headers.get("tags") || request.headers.get("x-tags") || (jsonData.tags as string);
-    const click = request.headers.get("click") || request.headers.get("x-click") || (jsonData.click as string);
+    const tagsRaw = request.headers.get("tags") || request.headers.get("x-tags") || (jsonData.tags as string);
+    const tags = tagsRaw ? tagsRaw.split(",").map((t: string) => t.trim()) : null;
+    const click_url = request.headers.get("click") || request.headers.get("x-click") || (jsonData.click as string) || null;
 
-    // Create notification object
-    const notification = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      topic,
-      title,
-      message: message.trim(),
-      priority,
-      tags: tags?.split(",").map((t: string) => t.trim()),
-      click,
-      timestamp: new Date().toISOString(),
-    };
+    // Insert message
+    const { data: msg, error: insertError } = await supabase
+      .from("iot_messages")
+      .insert({
+        topic_id: topic.id,
+        title,
+        message: message.trim(),
+        priority,
+        tags,
+        click_url,
+        metadata: jsonData.metadata || null,
+      })
+      .select("id, created_at")
+      .single();
 
-    // Store in history (for dashboard)
-    messageHistory.unshift({
-      id: notification.id,
-      topic,
-      title: title || undefined,
-      message: message.trim(),
-      priority,
-      timestamp: notification.timestamp,
-    });
-
-    // Keep only last 100 messages in memory (demo)
-    if (messageHistory.length > 100) {
-      messageHistory.pop();
+    if (insertError) {
+      console.error("[iotpush] Insert error:", insertError);
+      return NextResponse.json({ error: "Failed to store message" }, { status: 500 });
     }
 
-    console.log(`[iotpush] New message on topic "${topic}":`, notification);
+    // Count subscribers
+    const { count: subscriberCount } = await supabase
+      .from("iot_subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("topic_id", topic.id)
+      .eq("active", true);
 
     return NextResponse.json({
       success: true,
-      id: notification.id,
-      topic,
-      timestamp: notification.timestamp,
+      id: msg.id,
+      topic: topicName,
+      timestamp: msg.created_at,
       message: "Notification sent",
-      subscribers: mockTopics[topic]?.subscribers || 0,
+      subscribers: subscriberCount || 0,
     });
-
   } catch (error) {
-    console.error("Push error:", error);
-    return NextResponse.json(
-      { error: "Failed to send notification" },
-      { status: 500 }
-    );
+    console.error("[iotpush] Push error:", error);
+    return NextResponse.json({ error: "Failed to send notification" }, { status: 500 });
   }
 }
 
-// GET - Retrieve recent messages for a topic (for subscribers)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ topic: string }> }
 ) {
-  const { topic } = await params;
-  const { searchParams } = new URL(request.url);
-  const since = searchParams.get("since"); // ISO timestamp
-  const limit = parseInt(searchParams.get("limit") || "10");
+  try {
+    const { topic: topicName } = await params;
+    const { searchParams } = new URL(request.url);
+    const since = searchParams.get("since");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50);
+    const supabase = createAdminClient();
 
-  // Filter messages for this topic
-  let messages = messageHistory.filter(m => m.topic === topic);
-  
-  if (since) {
-    messages = messages.filter(m => m.timestamp > since);
+    // Look up topic
+    const { data: topic, error: topicError } = await supabase
+      .from("iot_topics")
+      .select("id, is_private, api_key")
+      .eq("name", topicName)
+      .limit(1)
+      .single();
+
+    if (topicError || !topic) {
+      return NextResponse.json({ error: `Topic "${topicName}" not found` }, { status: 404 });
+    }
+
+    // Private topic auth check
+    if (topic.is_private) {
+      const authHeader = request.headers.get("authorization");
+      const token = authHeader?.replace("Bearer ", "");
+      if (!token || token !== topic.api_key) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
+    let query = supabase
+      .from("iot_messages")
+      .select("id, title, message, priority, tags, click_url, created_at")
+      .eq("topic_id", topic.id)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (since) {
+      query = query.gt("created_at", since);
+    }
+
+    const { data: messages, error: msgError } = await query;
+
+    if (msgError) {
+      return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      topic: topicName,
+      messages: messages || [],
+      count: messages?.length || 0,
+    });
+  } catch (error) {
+    console.error("[iotpush] GET error:", error);
+    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
   }
-
-  messages = messages.slice(0, Math.min(limit, 50));
-
-  return NextResponse.json({
-    topic,
-    messages,
-    count: messages.length,
-  });
 }
 
-// Also support PUT for compatibility
 export const PUT = POST;
