@@ -395,16 +395,24 @@ export default function DashboardClient({
                     )}
 
                     {/* Subscribers Section */}
-                    <button
-                      onClick={() => toggleSubscribers(topic.id)}
-                      className="mt-3 w-full flex items-center justify-between text-xs text-gray-400 hover:text-orange-400 transition border-t border-gray-700 pt-3"
-                    >
-                      <span className="flex items-center gap-1">
-                        <Bell className="w-3 h-3" />
-                        {topic.subscriber_count} subscriber{topic.subscriber_count !== 1 ? "s" : ""}
-                      </span>
-                      {expandedTopic === topic.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </button>
+                    <div className="mt-3 flex items-center gap-2 border-t border-gray-700 pt-3">
+                      <button
+                        onClick={() => toggleSubscribers(topic.id)}
+                        className="flex-1 flex items-center justify-between text-xs text-gray-400 hover:text-orange-400 transition"
+                      >
+                        <span className="flex items-center gap-1">
+                          <Bell className="w-3 h-3" />
+                          {topic.subscriber_count} subscriber{topic.subscriber_count !== 1 ? "s" : ""}
+                        </span>
+                        {expandedTopic === topic.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                      <button
+                        onClick={() => { if (expandedTopic !== topic.id) toggleSubscribers(topic.id); }}
+                        className="text-xs bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-2 py-1 rounded-md transition font-medium"
+                      >
+                        + Add
+                      </button>
+                    </div>
 
                     {expandedTopic === topic.id && (
                       <div className="mt-3 space-y-2">
