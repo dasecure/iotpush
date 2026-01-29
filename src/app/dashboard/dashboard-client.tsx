@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Plus, Copy, Check, Send, Trash2, LogOut, Lock, Globe, X } from "lucide-react";
+import { Bell, Plus, Copy, Check, Send, Trash2, LogOut, Lock, Globe, X, ChevronDown, ChevronUp, Link2, Mail, Smartphone } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -28,6 +28,14 @@ interface Message {
   created_at: string;
   topic_id: string;
   topic_name: string;
+}
+
+interface Subscriber {
+  id: string;
+  endpoint: string;
+  type: "webhook" | "email" | "expo_push";
+  active: boolean;
+  created_at: string;
 }
 
 interface DashboardProps {
@@ -55,6 +63,12 @@ export default function DashboardClient({
   const [newTopicPrivate, setNewTopicPrivate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [sending, setSending] = useState(false);
+  const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
+  const [subscribers, setSubscribers] = useState<Record<string, Subscriber[]>>({});
+  const [loadingSubs, setLoadingSubs] = useState<string | null>(null);
+  const [newSubType, setNewSubType] = useState<"webhook" | "email" | "expo_push">("webhook");
+  const [newSubEndpoint, setNewSubEndpoint] = useState("");
+  const [addingSub, setAddingSub] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -122,6 +136,86 @@ export default function DashboardClient({
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();
+  };
+
+  const toggleSubscribers = async (topicId: string) => {
+    if (expandedTopic === topicId) {
+      setExpandedTopic(null);
+      return;
+    }
+    setExpandedTopic(topicId);
+    if (!subscribers[topicId]) {
+      setLoadingSubs(topicId);
+      try {
+        const res = await fetch(`/api/subscribers?topic_id=${topicId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSubscribers((prev) => ({ ...prev, [topicId]: data.subscribers }));
+        }
+      } catch {
+        // ignore
+      }
+      setLoadingSubs(null);
+    }
+  };
+
+  const addSubscriber = async (topicId: string) => {
+    if (!newSubEndpoint.trim()) return;
+    setAddingSub(true);
+    try {
+      const res = await fetch("/api/subscribers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic_id: topicId, endpoint: newSubEndpoint, type: newSubType }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubscribers((prev) => ({
+          ...prev,
+          [topicId]: [data.subscriber, ...(prev[topicId] || [])],
+        }));
+        setNewSubEndpoint("");
+      }
+    } catch {
+      // ignore
+    }
+    setAddingSub(false);
+  };
+
+  const deleteSubscriber = async (topicId: string, subId: string) => {
+    try {
+      const res = await fetch("/api/subscribers", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: subId }),
+      });
+      if (res.ok) {
+        setSubscribers((prev) => ({
+          ...prev,
+          [topicId]: (prev[topicId] || []).filter((s) => s.id !== subId),
+        }));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const subTypeIcon = (type: string) => {
+    switch (type) {
+      case "webhook": return <Link2 className="w-3 h-3 text-blue-400" />;
+      case "email": return <Mail className="w-3 h-3 text-green-400" />;
+      case "expo_push": return <Smartphone className="w-3 h-3 text-purple-400" />;
+      default: return null;
+    }
+  };
+
+  const subTypeBadge = (type: string) => {
+    const colors: Record<string, string> = {
+      webhook: "bg-blue-500/20 text-blue-400",
+      email: "bg-green-500/20 text-green-400",
+      expo_push: "bg-purple-500/20 text-purple-400",
+    };
+    return colors[type] || "bg-gray-500/20 text-gray-400";
   };
 
   const timeAgo = (dateStr: string | null) => {
@@ -298,6 +392,74 @@ export default function DashboardClient({
                           <>🔑 Copy API Key</>
                         )}
                       </button>
+                    )}
+
+                    {/* Subscribers Section */}
+                    <button
+                      onClick={() => toggleSubscribers(topic.id)}
+                      className="mt-3 w-full flex items-center justify-between text-xs text-gray-400 hover:text-orange-400 transition border-t border-gray-700 pt-3"
+                    >
+                      <span className="flex items-center gap-1">
+                        <Bell className="w-3 h-3" />
+                        {topic.subscriber_count} subscriber{topic.subscriber_count !== 1 ? "s" : ""}
+                      </span>
+                      {expandedTopic === topic.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+
+                    {expandedTopic === topic.id && (
+                      <div className="mt-3 space-y-2">
+                        {loadingSubs === topic.id ? (
+                          <p className="text-xs text-gray-500">Loading...</p>
+                        ) : (
+                          <>
+                            {(subscribers[topic.id] || []).map((sub) => (
+                              <div key={sub.id} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  {subTypeIcon(sub.type)}
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${subTypeBadge(sub.type)}`}>{sub.type === "expo_push" ? "push" : sub.type}</span>
+                                  <span className="text-xs text-gray-400 truncate">{sub.endpoint}</span>
+                                </div>
+                                <button
+                                  onClick={() => deleteSubscriber(topic.id, sub.id)}
+                                  className="text-gray-600 hover:text-red-400 transition ml-2 flex-shrink-0"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+
+                            {/* Add subscriber form */}
+                            <div className="bg-gray-900/50 rounded-lg p-3 space-y-2">
+                              <div className="flex gap-2">
+                                <select
+                                  value={newSubType}
+                                  onChange={(e) => setNewSubType(e.target.value as "webhook" | "email" | "expo_push")}
+                                  className="bg-gray-800 border border-gray-700 rounded-md px-2 py-1 text-xs focus:outline-none focus:border-orange-500"
+                                >
+                                  <option value="webhook">🔗 Webhook</option>
+                                  <option value="email">📧 Email</option>
+                                  <option value="expo_push">📱 Push</option>
+                                </select>
+                                <input
+                                  type="text"
+                                  value={newSubEndpoint}
+                                  onChange={(e) => setNewSubEndpoint(e.target.value)}
+                                  onKeyDown={(e) => e.key === "Enter" && addSubscriber(topic.id)}
+                                  placeholder={newSubType === "webhook" ? "https://..." : newSubType === "email" ? "email@example.com" : "ExponentPushToken[...]"}
+                                  className="flex-1 bg-gray-800 border border-gray-700 rounded-md px-2 py-1 text-xs focus:outline-none focus:border-orange-500 min-w-0"
+                                />
+                              </div>
+                              <button
+                                onClick={() => addSubscriber(topic.id)}
+                                disabled={addingSub || !newSubEndpoint.trim()}
+                                className="w-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs font-medium rounded-md px-3 py-1.5 transition disabled:opacity-50"
+                              >
+                                {addingSub ? "Adding..." : "Add Subscriber"}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}

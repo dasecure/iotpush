@@ -1,19 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * iotpush - Push Notification API
  *
  * POST /api/push/{topic} — Send a notification
  * GET  /api/push/{topic} — Fetch recent messages
- *
- * Headers (optional):
- * - Title / X-Title: Notification title
- * - Priority / X-Priority: low, normal, high, urgent
- * - Tags / X-Tags: Comma-separated tags
- * - Click / X-Click: URL to open on click
- * - Authorization: Bearer {api_key} (required for private topics)
  */
+
+// Fire-and-forget delivery functions
+function deliverWebhook(endpoint: string, payload: Record<string, unknown>) {
+  fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(10000),
+  }).catch((err) => console.error(`[iotpush] Webhook delivery failed (${endpoint}):`, err.message));
+}
+
+function deliverEmail(endpoint: string, topicName: string, title: string | null, message: string, priority: string) {
+  const subject = title || `New notification from ${topicName}`;
+  const priorityColor = priority === "urgent" ? "#ef4444" : priority === "high" ? "#f97316" : "#6b7280";
+  const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+
+  resend.emails.send({
+    from: "iotpush <onboarding@resend.dev>",
+    to: endpoint,
+    subject,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 20px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <span style="font-size:24px;font-weight:bold;color:#fff;">iot<span style="color:#f97316;">push</span></span>
+    </div>
+    <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <span style="background:#f97316;color:#fff;font-size:12px;padding:2px 8px;border-radius:6px;font-weight:600;">${topicName}</span>
+        <span style="background:${priorityColor}22;color:${priorityColor};font-size:12px;padding:2px 8px;border-radius:6px;">${priorityLabel}</span>
+      </div>
+      ${title ? `<h2 style="color:#fff;margin:0 0 12px;font-size:18px;">${title}</h2>` : ""}
+      <p style="color:#a1a1aa;margin:0;font-size:15px;line-height:1.6;">${message}</p>
+    </div>
+    <p style="text-align:center;color:#52525b;font-size:12px;margin-top:24px;">
+      Sent via <a href="https://iotpush.co" style="color:#f97316;text-decoration:none;">iotpush</a>
+    </p>
+  </div>
+</body>
+</html>`,
+  }).catch((err) => console.error(`[iotpush] Email delivery failed (${endpoint}):`, err));
+}
+
+function deliverExpoPush(endpoint: string, topicName: string, title: string | null, message: string, messageId: string, priority: string) {
+  const expoPriority = priority === "urgent" || priority === "high" ? "high" : "default";
+  fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Accept-Encoding": "gzip, deflate",
+    },
+    body: JSON.stringify({
+      to: endpoint,
+      title: title || `Notification from ${topicName}`,
+      body: message,
+      data: { topic: topicName, messageId },
+      sound: "default",
+      priority: expoPriority,
+    }),
+    signal: AbortSignal.timeout(10000),
+  }).catch((err) => console.error(`[iotpush] Expo push delivery failed (${endpoint}):`, err.message));
+}
 
 export async function POST(
   request: NextRequest,
@@ -93,12 +155,46 @@ export async function POST(
       return NextResponse.json({ error: "Failed to store message" }, { status: 500 });
     }
 
-    // Count subscribers
-    const { count: subscriberCount } = await supabase
+    // Fetch active subscribers and deliver (fire-and-forget)
+    const { data: subscribers } = await supabase
       .from("iot_subscribers")
-      .select("*", { count: "exact", head: true })
+      .select("id, endpoint, type")
       .eq("topic_id", topic.id)
       .eq("active", true);
+
+    const subscriberCount = subscribers?.length || 0;
+
+    if (subscribers && subscribers.length > 0) {
+      const timestamp = msg.created_at;
+      const payload = {
+        topic: topicName,
+        title: title || "Alert",
+        message: message.trim(),
+        priority,
+        tags,
+        click_url,
+        timestamp,
+        id: msg.id,
+      };
+
+      for (const sub of subscribers) {
+        try {
+          switch (sub.type) {
+            case "webhook":
+              deliverWebhook(sub.endpoint, payload);
+              break;
+            case "email":
+              deliverEmail(sub.endpoint, topicName, title, message.trim(), priority);
+              break;
+            case "expo_push":
+              deliverExpoPush(sub.endpoint, topicName, title, message.trim(), msg.id, priority);
+              break;
+          }
+        } catch (err) {
+          console.error(`[iotpush] Delivery error for subscriber ${sub.id}:`, err);
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -106,7 +202,7 @@ export async function POST(
       topic: topicName,
       timestamp: msg.created_at,
       message: "Notification sent",
-      subscribers: subscriberCount || 0,
+      subscribers: subscriberCount,
     });
   } catch (error) {
     console.error("[iotpush] Push error:", error);
