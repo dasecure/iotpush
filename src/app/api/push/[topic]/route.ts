@@ -11,22 +11,28 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * GET  /api/push/{topic} — Fetch recent messages
  */
 
-// Fire-and-forget delivery functions
-function deliverWebhook(endpoint: string, payload: Record<string, unknown>) {
-  fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(10000),
-  }).catch((err) => console.error(`[iotpush] Webhook delivery failed (${endpoint}):`, err.message));
+// Delivery functions (awaited to prevent Vercel from killing before completion)
+async function deliverWebhook(endpoint: string, payload: Record<string, unknown>) {
+  try {
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(10000),
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[iotpush] Webhook delivery failed (${endpoint}):`, message);
+  }
 }
 
-function deliverEmail(endpoint: string, topicName: string, title: string | null, message: string, priority: string) {
+async function deliverEmail(endpoint: string, topicName: string, title: string | null, message: string, priority: string) {
+  try {
   const subject = title || `New notification from ${topicName}`;
   const priorityColor = priority === "urgent" ? "#ef4444" : priority === "high" ? "#f97316" : "#6b7280";
   const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
 
-  resend.emails.send({
+  await resend.emails.send({
     from: "iotpush <onboarding@resend.dev>",
     to: endpoint,
     subject,
@@ -53,28 +59,37 @@ function deliverEmail(endpoint: string, topicName: string, title: string | null,
   </div>
 </body>
 </html>`,
-  }).catch((err) => console.error(`[iotpush] Email delivery failed (${endpoint}):`, err));
+  });
+  } catch (err) {
+    console.error(`[iotpush] Email delivery failed (${endpoint}):`, err);
+  }
 }
 
-function deliverExpoPush(endpoint: string, topicName: string, title: string | null, message: string, messageId: string, priority: string) {
-  const expoPriority = priority === "urgent" || priority === "high" ? "high" : "default";
-  fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      "Accept-Encoding": "gzip, deflate",
-    },
-    body: JSON.stringify({
-      to: endpoint,
-      title: title || `Notification from ${topicName}`,
-      body: message,
-      data: { topic: topicName, messageId },
-      sound: "default",
-      priority: expoPriority,
-    }),
-    signal: AbortSignal.timeout(10000),
-  }).catch((err) => console.error(`[iotpush] Expo push delivery failed (${endpoint}):`, err.message));
+async function deliverExpoPush(endpoint: string, topicName: string, title: string | null, message: string, messageId: string, priority: string) {
+  try {
+    const expoPriority = priority === "urgent" || priority === "high" ? "high" : "default";
+    const res = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        to: endpoint,
+        title: title || `Notification from ${topicName}`,
+        body: message,
+        data: { topic: topicName, messageId },
+        sound: "default",
+        priority: expoPriority,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const result = await res.json();
+    console.log(`[iotpush] Expo push result:`, JSON.stringify(result));
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[iotpush] Expo push delivery failed (${endpoint}):`, msg);
+  }
 }
 
 export async function POST(
@@ -177,23 +192,24 @@ export async function POST(
         id: msg.id,
       };
 
-      for (const sub of subscribers) {
+      const deliveryPromises = subscribers.map(async (sub) => {
         try {
           switch (sub.type) {
             case "webhook":
-              deliverWebhook(sub.endpoint, payload);
+              await deliverWebhook(sub.endpoint, payload);
               break;
             case "email":
-              deliverEmail(sub.endpoint, topicName, title, message.trim(), priority);
+              await deliverEmail(sub.endpoint, topicName, title, message.trim(), priority);
               break;
             case "expo_push":
-              deliverExpoPush(sub.endpoint, topicName, title, message.trim(), msg.id, priority);
+              await deliverExpoPush(sub.endpoint, topicName, title, message.trim(), msg.id, priority);
               break;
           }
         } catch (err) {
           console.error(`[iotpush] Delivery error for subscriber ${sub.id}:`, err);
         }
-      }
+      });
+      await Promise.all(deliveryPromises);
     }
 
     return NextResponse.json({
