@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 /**
  * iotpush - Push Notification API
@@ -32,6 +32,7 @@ async function deliverEmail(endpoint: string, topicName: string, title: string |
   const priorityColor = priority === "urgent" ? "#ef4444" : priority === "high" ? "#f97316" : "#6b7280";
   const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
 
+  if (!resend) { console.error("[iotpush] RESEND_API_KEY not set"); return; }
   await resend.emails.send({
     from: "iotpush <onboarding@resend.dev>",
     to: endpoint,
