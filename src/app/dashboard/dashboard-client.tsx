@@ -240,6 +240,7 @@ export default function DashboardClient({
             <span>iot<span className="text-orange-400">push</span></span>
           </Link>
           <div className="flex gap-4 items-center">
+            <Link href="/dashboard/billing" className="text-gray-400 hover:text-white transition">Billing</Link>
             <Link href="/docs" className="text-gray-400 hover:text-white transition">Docs</Link>
             <span className="text-gray-400 text-sm">{user.email}</span>
             <button
@@ -268,10 +269,10 @@ export default function DashboardClient({
             <p className="text-gray-400 text-sm">Subscribers</p>
             <p className="text-2xl font-bold">{totalSubscribers}</p>
           </div>
-          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+          <Link href="/dashboard/billing" className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-orange-500/50 transition block">
             <p className="text-gray-400 text-sm">Plan</p>
             <p className="text-2xl font-bold text-orange-400">Free</p>
-          </div>
+          </Link>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">

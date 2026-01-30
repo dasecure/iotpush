@@ -187,16 +187,16 @@ requests.post(
               <div className="text-4xl font-bold mb-6">$0</div>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 100 messages/day
+                  <span className="text-orange-400">✓</span> 1 topic
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 3 topics
+                  <span className="text-orange-400">✓</span> 100 pushes/month
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Web & mobile push
+                  <span className="text-orange-400">✓</span> Public topics only
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 24h message history
+                  <span className="text-orange-400">✓</span> Web push notifications
                 </li>
               </ul>
               <Link href="/signup" className="block text-center border border-gray-600 hover:border-gray-500 py-3 rounded-lg transition">
@@ -210,27 +210,27 @@ requests.post(
                 Popular
               </div>
               <h3 className="text-xl font-bold mb-2">Pro</h3>
-              <p className="text-gray-400 text-sm mb-4">For serious projects</p>
+              <p className="text-gray-400 text-sm mb-4">For serious IoT projects</p>
               <div className="text-4xl font-bold mb-6">$9<span className="text-lg text-gray-400">/mo</span></div>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 10,000 messages/day
+                  <span className="text-orange-400">✓</span> 10 topics
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Unlimited topics
+                  <span className="text-orange-400">✓</span> 10,000 pushes/month
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Email & SMS delivery
+                  <span className="text-orange-400">✓</span> Private topics
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Webhooks (Slack, Discord)
+                  <span className="text-orange-400">✓</span> Webhooks (Slack, Discord, email)
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 30 day history
+                  <span className="text-orange-400">✓</span> 30-day message history
                 </li>
               </ul>
               <Link href="/signup?plan=pro" className="block text-center bg-orange-500 hover:bg-orange-600 py-3 rounded-lg font-semibold transition">
-                Start Free Trial
+                Start Pro
               </Link>
             </div>
 
@@ -238,26 +238,26 @@ requests.post(
             <div className="bg-gray-800/50 p-8 rounded-xl border border-gray-700">
               <h3 className="text-xl font-bold mb-2">Business</h3>
               <p className="text-gray-400 text-sm mb-4">For teams & production</p>
-              <div className="text-4xl font-bold mb-6">$49<span className="text-lg text-gray-400">/mo</span></div>
+              <div className="text-4xl font-bold mb-6">$29<span className="text-lg text-gray-400">/mo</span></div>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Unlimited messages
+                  <span className="text-orange-400">✓</span> Unlimited topics
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Team access
+                  <span className="text-orange-400">✓</span> 100,000 pushes/month
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">✓</span> Private topics
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> API keys
+                  <span className="text-orange-400">✓</span> Webhooks
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">✓</span> Priority support
                 </li>
               </ul>
               <Link href="/signup?plan=business" className="block text-center border border-gray-600 hover:border-gray-500 py-3 rounded-lg transition">
-                Contact Sales
+                Start Business
               </Link>
             </div>
           </div>
