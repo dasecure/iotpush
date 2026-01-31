@@ -13,8 +13,6 @@ export const metadata: Metadata = {
     title: "iotpush — One API call. Push, email, and webhook delivery.",
     description: "Send push notifications, emails, and webhooks from any device with a single HTTP request. The multi-channel notification API for IoT.",
     type: "website",
-    // TODO: Create actual og-image.png (1200x630) and place in /public/og-image.png
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "iotpush — Multi-channel notifications for IoT" }],
   },
 };
 
