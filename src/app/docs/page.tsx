@@ -145,8 +145,8 @@ http.end();`}</pre>
             <tbody className="text-gray-400">
               <tr className="border-b border-gray-800">
                 <td className="py-2">Free</td>
-                <td className="py-2">100</td>
-                <td className="py-2">1</td>
+                <td className="py-2">1,000</td>
+                <td className="py-2">3</td>
               </tr>
               <tr className="border-b border-gray-800">
                 <td className="py-2">Pro ($9/mo)</td>

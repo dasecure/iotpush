@@ -24,7 +24,7 @@ export const PLANS = {
 export type PaidPlan = keyof typeof PLANS;
 
 export const PLAN_LIMITS = {
-  free: { topics: 1, pushes: 100, privateTopics: false, webhooks: false },
+  free: { topics: 3, pushes: 1_000, privateTopics: false, webhooks: false },
   pro: { topics: 10, pushes: 10_000, privateTopics: true, webhooks: true },
   business: { topics: Infinity, pushes: 100_000, privateTopics: true, webhooks: true },
 } as const;

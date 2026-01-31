@@ -135,6 +135,7 @@ export async function POST(
     }
 
     // --- Enforce monthly push limit based on owner's plan ---
+    let ownerPlan: PlanName = "free";
     // Get the topic owner's user_id
     const { data: topicFull } = await supabase
       .from("iot_topics")
@@ -184,6 +185,8 @@ export async function POST(
         .from("iot_accounts")
         .update({ pushes_used: pushesUsed + 1 })
         .eq("user_id", topicFull.user_id);
+
+      ownerPlan = plan;
     }
 
     // Parse request body
@@ -200,6 +203,11 @@ export async function POST(
 
     if (!message || message.trim() === "") {
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
+    }
+
+    // Append branding for free tier users
+    if (ownerPlan === "free") {
+      message = message.trim() + " • via iotpush.com";
     }
 
     // Extract optional headers / JSON fields

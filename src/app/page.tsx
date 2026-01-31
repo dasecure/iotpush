@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, Cpu, Zap, Shield, Globe, Terminal, ArrowRight, Smartphone } from "lucide-react";
+import { Bell, Cpu, Zap, Shield, Globe, Terminal, ArrowRight, Smartphone, Mail, Layers } from "lucide-react";
 
 export default function Home() {
   return (
@@ -30,15 +30,15 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl">
             <div className="inline-block bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-1 text-orange-400 text-sm mb-6">
-              Push notifications for IoT devices
+              Multi-channel notifications for IoT
             </div>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Your devices,<br />
-              <span className="text-orange-400">always connected</span>
+              One API call.<br />
+              <span className="text-orange-400">Push, email, and webhook.</span>
             </h1>
             <p className="text-xl text-gray-400 mb-8">
-              Send push notifications from any device with a simple HTTP request. 
-              Raspberry Pi, Arduino, servers — if it can curl, it can push.
+              Send push notifications, emails, and webhooks from any device with a single HTTP request.
+              Raspberry Pi, Arduino, servers — if it can curl, it can notify everywhere.
             </p>
             
             {/* Code Example */}
@@ -109,12 +109,12 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center mb-12">Built for IoT</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
+              { icon: Layers, title: "Multi-Channel Delivery", desc: "Push, email, and webhook — all from one API call. Notify everywhere at once." },
               { icon: Cpu, title: "Any Device", desc: "Raspberry Pi, Arduino, ESP32, servers — anything with HTTP" },
               { icon: Zap, title: "Instant Delivery", desc: "Real-time push to all subscribed devices" },
               { icon: Terminal, title: "Simple API", desc: "One curl command. No SDKs required." },
               { icon: Smartphone, title: "Mobile Ready", desc: "iOS and Android push notifications" },
               { icon: Shield, title: "Secure", desc: "Optional authentication and private topics" },
-              { icon: Globe, title: "Webhooks", desc: "Forward notifications to Slack, Discord, email" },
             ].map((feature) => (
               <div key={feature.title} className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
                 <feature.icon className="w-10 h-10 text-orange-400 mb-4" />
@@ -187,16 +187,16 @@ requests.post(
               <div className="text-4xl font-bold mb-6">$0</div>
               <ul className="space-y-3 mb-8 text-sm">
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 1 topic
+                  <span className="text-orange-400">✓</span> 3 topics
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> 100 pushes/month
+                  <span className="text-orange-400">✓</span> 1,000 pushes/month
+                </li>
+                <li className="flex items-center gap-2 text-gray-300">
+                  <span className="text-orange-400">✓</span> Push + email delivery
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">✓</span> Public topics only
-                </li>
-                <li className="flex items-center gap-2 text-gray-300">
-                  <span className="text-orange-400">✓</span> Web push notifications
                 </li>
               </ul>
               <Link href="/signup" className="block text-center border border-gray-600 hover:border-gray-500 py-3 rounded-lg transition">

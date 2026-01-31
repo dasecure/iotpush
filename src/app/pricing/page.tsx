@@ -8,10 +8,10 @@ const tiers = [
     period: "",
     description: "For makers & hobby projects",
     features: [
-      "1 topic",
-      "100 pushes/month",
+      "3 topics",
+      "1,000 pushes/month",
+      "Push + email delivery",
       "Public topics only",
-      "Web push notifications",
       "Community support",
     ],
     cta: "Get Started",
