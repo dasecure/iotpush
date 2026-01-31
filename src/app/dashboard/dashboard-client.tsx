@@ -82,8 +82,14 @@ export default function DashboardClient({
     if (!testMessage.trim() || !testTopic) return;
     setSending(true);
     try {
+      const topic = topics.find((t) => t.name === testTopic);
+      const headers: Record<string, string> = {};
+      if (topic?.is_private && topic.api_key) {
+        headers["Authorization"] = `Bearer ${topic.api_key}`;
+      }
       const res = await fetch(`/api/push/${testTopic}`, {
         method: "POST",
+        headers,
         body: testMessage,
       });
       if (res.ok) {
