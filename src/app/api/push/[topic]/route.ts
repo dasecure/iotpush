@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { Resend } from "resend";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -259,24 +260,39 @@ export async function POST(
         id: msg.id,
       };
 
-      const deliveryPromises = subscribers.map(async (sub) => {
-        try {
-          switch (sub.type) {
-            case "webhook":
-              await deliverWebhook(sub.endpoint, payload);
-              break;
-            case "email":
-              await deliverEmail(sub.endpoint, topicName, title, message.trim(), priority);
-              break;
-            case "expo_push":
-              await deliverExpoPush(sub.endpoint, topicName, title, message.trim(), msg.id, priority);
-              break;
+      // Batch subscribers into groups of 50 to avoid overwhelming external services
+      const BATCH_SIZE = 50;
+      const batches: typeof subscribers[] = [];
+      for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
+        batches.push(subscribers.slice(i, i + BATCH_SIZE));
+      }
+
+      // Deliver in background — response returns immediately
+      waitUntil(
+        (async () => {
+          for (const batch of batches) {
+            await Promise.all(
+              batch.map(async (sub) => {
+                try {
+                  switch (sub.type) {
+                    case "webhook":
+                      await deliverWebhook(sub.endpoint, payload);
+                      break;
+                    case "email":
+                      await deliverEmail(sub.endpoint, topicName, title, message.trim(), priority);
+                      break;
+                    case "expo_push":
+                      await deliverExpoPush(sub.endpoint, topicName, title, message.trim(), msg.id, priority);
+                      break;
+                  }
+                } catch (err) {
+                  console.error(`[iotpush] Delivery error for subscriber ${sub.id}:`, err);
+                }
+              })
+            );
           }
-        } catch (err) {
-          console.error(`[iotpush] Delivery error for subscriber ${sub.id}:`, err);
-        }
-      });
-      await Promise.all(deliveryPromises);
+        })()
+      );
     }
 
     return NextResponse.json({
