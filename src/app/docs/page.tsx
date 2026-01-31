@@ -138,7 +138,7 @@ http.end();`}</pre>
             <thead>
               <tr className="text-left border-b border-gray-800">
                 <th className="py-2">Plan</th>
-                <th className="py-2">Messages/Day</th>
+                <th className="py-2">Messages/Month</th>
                 <th className="py-2">Topics</th>
               </tr>
             </thead>
@@ -146,16 +146,16 @@ http.end();`}</pre>
               <tr className="border-b border-gray-800">
                 <td className="py-2">Free</td>
                 <td className="py-2">100</td>
-                <td className="py-2">3</td>
+                <td className="py-2">1</td>
               </tr>
               <tr className="border-b border-gray-800">
                 <td className="py-2">Pro ($9/mo)</td>
                 <td className="py-2">10,000</td>
-                <td className="py-2">Unlimited</td>
+                <td className="py-2">10</td>
               </tr>
               <tr className="border-b border-gray-800">
-                <td className="py-2">Business ($49/mo)</td>
-                <td className="py-2">Unlimited</td>
+                <td className="py-2">Business ($29/mo)</td>
+                <td className="py-2">100,000</td>
                 <td className="py-2">Unlimited</td>
               </tr>
             </tbody>

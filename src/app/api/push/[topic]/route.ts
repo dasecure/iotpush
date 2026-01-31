@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { Resend } from "resend";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { PLAN_LIMITS, type PlanName } from "@/lib/stripe";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -131,6 +132,58 @@ export async function POST(
           { status: 401 }
         );
       }
+    }
+
+    // --- Enforce monthly push limit based on owner's plan ---
+    // Get the topic owner's user_id
+    const { data: topicFull } = await supabase
+      .from("iot_topics")
+      .select("user_id")
+      .eq("id", topic.id)
+      .single();
+
+    if (topicFull?.user_id) {
+      // Look up the owner's account/plan
+      const { data: account } = await supabase
+        .from("iot_accounts")
+        .select("plan, pushes_used, pushes_reset_at")
+        .eq("user_id", topicFull.user_id)
+        .single();
+
+      const plan = (account?.plan || "free") as PlanName;
+      const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+      let pushesUsed = account?.pushes_used || 0;
+
+      // Check if the reset period has passed; if so, reset the counter
+      if (account?.pushes_reset_at && new Date(account.pushes_reset_at) <= new Date()) {
+        pushesUsed = 0;
+        // Reset the counter and set next reset date (first of next month)
+        const nextReset = new Date();
+        nextReset.setMonth(nextReset.getMonth() + 1, 1);
+        nextReset.setHours(0, 0, 0, 0);
+        await supabase
+          .from("iot_accounts")
+          .update({ pushes_used: 0, pushes_reset_at: nextReset.toISOString() })
+          .eq("user_id", topicFull.user_id);
+      }
+
+      if (pushesUsed >= limits.pushes) {
+        return NextResponse.json(
+          {
+            error: `Monthly push limit reached (${limits.pushes.toLocaleString()} pushes on ${plan} plan). Upgrade at https://iotpush.com/dashboard/billing`,
+            limit: limits.pushes,
+            used: pushesUsed,
+            plan,
+          },
+          { status: 429 }
+        );
+      }
+
+      // Increment push count
+      await supabase
+        .from("iot_accounts")
+        .update({ pushes_used: pushesUsed + 1 })
+        .eq("user_id", topicFull.user_id);
     }
 
     // Parse request body

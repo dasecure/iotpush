@@ -44,7 +44,14 @@ interface DashboardProps {
   recentMessages: Message[];
   messagesToday: number;
   totalSubscribers: number;
+  plan: string;
 }
+
+const PLAN_DISPLAY: Record<string, { label: string; color: string }> = {
+  free: { label: "Free", color: "text-gray-400" },
+  pro: { label: "Pro", color: "text-orange-400" },
+  business: { label: "Business", color: "text-purple-400" },
+};
 
 export default function DashboardClient({
   user,
@@ -52,6 +59,7 @@ export default function DashboardClient({
   recentMessages,
   messagesToday,
   totalSubscribers,
+  plan,
 }: DashboardProps) {
   const [topics, setTopics] = useState(initialTopics);
   const [copied, setCopied] = useState<string | null>(null);
@@ -277,7 +285,9 @@ export default function DashboardClient({
           </div>
           <Link href="/dashboard/billing" className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-orange-500/50 transition block">
             <p className="text-gray-400 text-sm">Plan</p>
-            <p className="text-2xl font-bold text-orange-400">Free</p>
+            <p className={`text-2xl font-bold ${PLAN_DISPLAY[plan]?.color || "text-gray-400"}`}>
+              {PLAN_DISPLAY[plan]?.label || plan.charAt(0).toUpperCase() + plan.slice(1)}
+            </p>
           </Link>
         </div>
 

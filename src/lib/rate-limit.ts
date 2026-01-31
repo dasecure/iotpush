@@ -5,6 +5,11 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
+// TODO: This in-memory rate limiter does NOT persist across Vercel serverless cold starts.
+// Each new Lambda instance gets a fresh Map, so rate limits reset on every cold start.
+// For production, replace with Upstash Redis (@upstash/ratelimit) for distributed,
+// persistent rate limiting across all serverless instances.
+// See: https://upstash.com/docs/redis/sdks/ratelimit-ts/overview
 const rateLimitMap = new Map<string, RateLimitEntry>();
 
 // Cleanup expired entries every 5 minutes

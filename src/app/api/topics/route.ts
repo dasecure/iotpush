@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { createAdminClient } from "@/lib/supabase-admin";
+import { PLAN_LIMITS, type PlanName } from "@/lib/stripe";
 
 // GET /api/topics — List user's topics
 export async function GET() {
@@ -37,6 +39,34 @@ export async function POST(request: NextRequest) {
 
   if (!name || typeof name !== "string") {
     return NextResponse.json({ error: "Topic name is required" }, { status: 400 });
+  }
+
+  // --- Enforce topic creation limit based on user's plan ---
+  const admin = createAdminClient();
+  const { data: account } = await admin
+    .from("iot_accounts")
+    .select("plan")
+    .eq("user_id", user.id)
+    .single();
+
+  const plan = (account?.plan || "free") as PlanName;
+  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+
+  const { count: existingTopicCount } = await supabase
+    .from("iot_topics")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  if ((existingTopicCount || 0) >= limits.topics) {
+    return NextResponse.json(
+      {
+        error: `Topic limit reached (${limits.topics} topic${limits.topics === 1 ? "" : "s"} on ${plan} plan). Upgrade at /dashboard/billing`,
+        limit: limits.topics,
+        current: existingTopicCount,
+        plan,
+      },
+      { status: 403 }
+    );
   }
 
   // Sanitize name: lowercase, alphanumeric + hyphens only

@@ -13,6 +13,15 @@ export default async function DashboardPage() {
 
   const admin = createAdminClient();
 
+  // Fetch user's account/plan
+  const { data: account } = await admin
+    .from("iot_accounts")
+    .select("plan")
+    .eq("user_id", user.id)
+    .single();
+
+  const userPlan = account?.plan || "free";
+
   // Fetch user's topics
   const { data: topics } = await admin
     .from("iot_topics")
@@ -93,6 +102,7 @@ export default async function DashboardPage() {
         recentMessages={messagesWithTopicName}
         messagesToday={messagesToday || 0}
         totalSubscribers={totalSubscribers}
+        plan={userPlan}
       />
     );
   }
@@ -104,6 +114,7 @@ export default async function DashboardPage() {
       recentMessages={[]}
       messagesToday={0}
       totalSubscribers={0}
+      plan={userPlan}
     />
   );
 }
