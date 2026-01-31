@@ -101,7 +101,7 @@ export async function POST(
 ) {
   try {
     const ip = getClientIp(request);
-    const { allowed, resetIn } = checkRateLimit(`push:${ip}`, 100);
+    const { allowed, resetIn } = await checkRateLimit(`push:${ip}`, 100);
     if (!allowed) return rateLimitResponse(resetIn);
 
     const { topic: topicName } = await params;

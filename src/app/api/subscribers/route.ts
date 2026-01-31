@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { PLAN_LIMITS, type PlanName } from "@/lib/stripe";
 
 const VALID_TYPES = ["webhook", "email", "expo_push"];
 
@@ -80,6 +81,28 @@ export async function POST(request: NextRequest) {
 
     if (!topic) {
       return NextResponse.json({ error: "Topic not found or not owned by you" }, { status: 404 });
+    }
+
+    // Gate webhook subscribers by plan
+    if (type === "webhook") {
+      const { data: account } = await admin
+        .from("iot_accounts")
+        .select("plan")
+        .eq("user_id", user.id)
+        .single();
+
+      const plan = (account?.plan || "free") as PlanName;
+      const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+
+      if (!limits.webhooks) {
+        return NextResponse.json(
+          {
+            error: `Webhook subscribers require a Pro or Business plan. Upgrade at /dashboard/billing`,
+            plan,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Upsert — don't duplicate same endpoint for same topic

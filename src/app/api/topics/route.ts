@@ -69,6 +69,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Gate private topics by plan
+  if (is_private && !limits.privateTopics) {
+    return NextResponse.json(
+      {
+        error: `Private topics require a Pro or Business plan. Upgrade at /dashboard/billing`,
+        plan,
+      },
+      { status: 403 }
+    );
+  }
+
   // Sanitize name: lowercase, alphanumeric + hyphens only
   const sanitized = name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
