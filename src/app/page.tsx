@@ -13,6 +13,7 @@ export default function Home() {
           </Link>
           <div className="flex gap-6 items-center">
             <Link href="/docs" className="text-gray-300 hover:text-white transition">Docs</Link>
+            <Link href="/integrations" className="text-gray-300 hover:text-white transition">Integrations</Link>
             <Link href="#pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
             <Link href="/login" className="text-gray-300 hover:text-white transition">Login</Link>
             <Link 
@@ -173,6 +174,40 @@ requests.post(
         </div>
       </section>
 
+      {/* Integrations */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">Works with everything</h2>
+          <p className="text-gray-400 text-center mb-12">If it can make an HTTP request, it works with iotpush</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+            {[
+              { name: "n8n", color: "bg-pink-500/20 text-pink-400 border-pink-500/30" },
+              { name: "Make", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+              { name: "Zapier", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
+              { name: "Home Assistant", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
+              { name: "cURL / Any", color: "bg-gray-500/20 text-gray-300 border-gray-500/30" },
+            ].map((platform) => (
+              <div
+                key={platform.name}
+                className={`${platform.color} border rounded-xl p-4 text-center font-medium text-sm`}
+              >
+                {platform.name}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/integrations"
+              className="inline-flex items-center gap-2 border border-orange-500/50 text-orange-400 hover:bg-orange-500/10 px-6 py-3 rounded-lg transition font-medium"
+            >
+              View Integration Guides <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
@@ -288,6 +323,7 @@ requests.post(
           <p className="text-gray-500 text-sm">© 2026 iotpush by dasecure solutions LLC</p>
           <div className="flex gap-6">
             <Link href="/docs" className="text-gray-500 hover:text-white transition text-sm">Docs</Link>
+            <Link href="/integrations" className="text-gray-500 hover:text-white transition text-sm">Integrations</Link>
             <Link href="/privacy" className="text-gray-500 hover:text-white transition text-sm">Privacy</Link>
             <Link href="/terms" className="text-gray-500 hover:text-white transition text-sm">Terms</Link>
           </div>

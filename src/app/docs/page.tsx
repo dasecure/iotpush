@@ -11,9 +11,12 @@ export default function Docs() {
             <Bell className="w-7 h-7 text-orange-400" />
             <span>iot<span className="text-orange-400">push</span></span>
           </Link>
-          <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
-            <ArrowLeft className="w-4 h-4" /> Back
-          </Link>
+          <div className="flex gap-6 items-center">
+            <Link href="/integrations" className="text-gray-300 hover:text-white transition">Integrations</Link>
+            <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -130,6 +133,29 @@ http.addHeader("Title", "ESP32 Alert");
 http.POST("Sensor value: " + String(sensorValue));
 http.end();`}</pre>
           </div>
+        </section>
+
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Integrations</h2>
+          <p className="text-gray-400 mb-4">
+            iotpush works with any automation platform that can make HTTP requests — n8n, Make, Zapier, Home Assistant, and more.
+          </p>
+          
+          <p className="text-gray-400 text-sm mb-2">Quick cURL example with JSON body and auth:</p>
+          <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm mb-4">
+            <p>curl -X POST https://www.iotpush.com/api/push/my-topic \</p>
+            <p>     -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \</p>
+            <p>     -H &quot;Content-Type: application/json&quot; \</p>
+            <p>     -d &apos;{`{"title":"Alert","message":"Something happened!","priority":"high"}`}&apos;</p>
+          </div>
+
+          <p className="text-gray-400 mb-4">
+            See our{" "}
+            <Link href="/integrations" className="text-orange-400 hover:underline">
+              full integration guides
+            </Link>{" "}
+            for step-by-step setup with n8n, Make, Zapier, Home Assistant, and more.
+          </p>
         </section>
 
         <section className="mb-12">
