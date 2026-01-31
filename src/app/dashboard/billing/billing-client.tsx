@@ -119,7 +119,7 @@ export default function BillingClient({
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
     router.push("/");
   };
 

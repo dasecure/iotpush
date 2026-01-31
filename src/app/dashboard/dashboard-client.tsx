@@ -133,7 +133,7 @@ export default function DashboardClient({
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "global" });
     router.push("/");
     router.refresh();
   };
