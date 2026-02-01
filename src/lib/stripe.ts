@@ -7,15 +7,17 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_place
 export const PLANS = {
   pro: {
     name: "Pro",
-    price: 900, // cents
+    price: 900, // cents/month
     priceId: process.env.STRIPE_PRO_PRICE_ID,
+    annualPriceId: process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
     topics: 10,
     pushes: 10_000,
   },
   business: {
     name: "Business",
-    price: 2900, // cents
+    price: 2900, // cents/month
     priceId: process.env.STRIPE_BUSINESS_PRICE_ID,
+    annualPriceId: process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID,
     topics: Infinity,
     pushes: 100_000,
   },

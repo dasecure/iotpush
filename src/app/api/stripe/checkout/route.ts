@@ -9,7 +9,7 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { plan, userId } = await req.json();
+    const { plan, userId, billing } = await req.json();
 
     if (!plan || !userId) {
       return NextResponse.json({ error: "Missing plan or userId" }, { status: 400 });
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const typedPlan = plan as PaidPlan;
+    const isAnnual = billing === "annual";
 
     // Fetch account
     const { data: account, error } = await supabase
@@ -98,22 +99,25 @@ export async function POST(req: NextRequest) {
 
     // Create new checkout session
     const planConfig = PLANS[typedPlan];
+    const priceId = isAnnual ? planConfig.annualPriceId : planConfig.priceId;
+    const interval = isAnnual ? "year" as const : "month" as const;
+    const amount = isAnnual ? Math.round(planConfig.price * 12 * 0.8) : planConfig.price; // 20% off annual
 
-    const lineItems = planConfig.priceId
-      ? [{ price: planConfig.priceId, quantity: 1 }]
+    const lineItems = priceId
+      ? [{ price: priceId, quantity: 1 }]
       : [
           {
             price_data: {
               currency: "usd" as const,
               product_data: {
-                name: `iotpush ${planConfig.name} Plan`,
+                name: `iotpush ${planConfig.name} Plan${isAnnual ? " (Annual)" : ""}`,
                 description:
                   typedPlan === "pro"
                     ? "10 topics, 10k pushes/month, private topics, webhooks"
                     : "Unlimited topics, 100k pushes/month, priority support",
               },
-              unit_amount: planConfig.price,
-              recurring: { interval: "month" as const },
+              unit_amount: amount,
+              recurring: { interval },
             },
             quantity: 1,
           },
