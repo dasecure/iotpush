@@ -183,10 +183,10 @@ requests.post(
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
             {[
               { name: "n8n", color: "bg-pink-500/20 text-pink-400 border-pink-500/30" },
-              { name: "Make", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
-              { name: "Zapier", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-              { name: "Home Assistant", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
-              { name: "cURL / Any", color: "bg-gray-500/20 text-gray-300 border-gray-500/30" },
+              { name: "cURL / Any HTTP", color: "bg-gray-500/20 text-gray-300 border-gray-500/30" },
+              { name: "Arduino / ESP32", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+              { name: "Raspberry Pi", color: "bg-red-500/20 text-red-400 border-red-500/30" },
+              { name: "Node.js / Python", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
             ].map((platform) => (
               <div
                 key={platform.name}
