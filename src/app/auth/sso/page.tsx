@@ -1,11 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { Loader2, Shield } from "lucide-react";
 
 export default function SSOPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-blue-400 animate-spin" />
+      </div>
+    }>
+      <SSOContent />
+    </Suspense>
+  );
+}
+
+function SSOContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "error">("loading");
