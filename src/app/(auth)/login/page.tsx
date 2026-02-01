@@ -29,6 +29,16 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setError("");
+
+    // Clear stale session/PKCE state before new OAuth flow
+    await supabase.auth.signOut({ scope: "local" });
+    document.cookie.split(";").forEach((c) => {
+      const name = c.trim().split("=")[0];
+      if (name.startsWith("sb-") || name.includes("code-verifier")) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+      }
+    });
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams: { prompt: "select_account" } },
