@@ -255,6 +255,7 @@ export default function DashboardClient({
           </Link>
           <div className="flex gap-4 items-center">
             <Link href="/dashboard/billing" className="text-gray-400 hover:text-white transition">Billing</Link>
+            <Link href="/dashboard/settings" className="text-gray-400 hover:text-white transition">Settings</Link>
             <Link href="/docs" className="text-gray-400 hover:text-white transition">Docs</Link>
             <span className="text-gray-400 text-sm">{user.email}</span>
             <button
