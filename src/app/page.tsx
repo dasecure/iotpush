@@ -1,31 +1,13 @@
 import Link from "next/link";
-import { Bell, Cpu, Zap, Shield, Globe, Terminal, ArrowRight, Smartphone, Mail, Layers } from "lucide-react";
+import { Bell, Cpu, Zap, Shield, Terminal, ArrowRight, Smartphone, Layers } from "lucide-react";
 import PricingSection from "@/components/PricingSection";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navigation */}
-      <nav className="fixed w-full bg-gray-950/80 backdrop-blur-md z-50 border-b border-gray-800">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold flex items-center gap-2">
-            <Bell className="w-7 h-7 text-orange-400" />
-            <span>iot<span className="text-orange-400">push</span></span>
-          </Link>
-          <div className="flex gap-6 items-center">
-            <Link href="/docs" className="text-gray-300 hover:text-white transition">Docs</Link>
-            <Link href="/integrations" className="text-gray-300 hover:text-white transition">Integrations</Link>
-            <Link href="#pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
-            <Link href="/login" className="text-gray-300 hover:text-white transition">Login</Link>
-            <Link 
-              href="/signup" 
-              className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg font-medium transition"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero */}
       <section className="pt-32 pb-20 px-6">
