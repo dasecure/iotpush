@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Loader2, Smartphone } from "lucide-react";
-
-const ZAP_RELAY = "wss://zap.passqr.com";
+import { Bell, Loader2 } from "lucide-react";
+import ZapQR from "@/components/ZapQR";
 
 function GoogleIcon() {
   return (
@@ -27,61 +26,6 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
-
-  // Zap QR state
-  const [zapSession, setZapSession] = useState<string | null>(null);
-  const [zapStatus, setZapStatus] = useState<"connecting" | "ready" | "connected" | "filled" | "error">("connecting");
-  const wsRef = useRef<WebSocket | null>(null);
-
-  // Initialize Zap WebSocket
-  useEffect(() => {
-    const ws = new WebSocket(ZAP_RELAY);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ type: "create_session", domain: window.location.hostname }));
-    };
-
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      if (msg.type === "session_created") {
-        setZapSession(msg.sessionId);
-        setZapStatus("ready");
-      }
-      if (msg.type === "mobile_connected") {
-        setZapStatus("connected");
-      }
-      if (msg.type === "payload") {
-        try {
-          const data = JSON.parse(atob(msg.data));
-          if (data.password) {
-            setPassword(data.password);
-            if (data.username || data.email) setEmail(data.username || data.email);
-            setZapStatus("filled");
-            setTimeout(() => {
-              document.getElementById("login-form")?.dispatchEvent(
-                new Event("submit", { cancelable: true, bubbles: true })
-              );
-            }, 500);
-          }
-        } catch (e) {
-          console.error("[Zap] Payload error:", e);
-        }
-      }
-      if (msg.type === "session_expired") {
-        ws.send(JSON.stringify({ type: "create_session", domain: window.location.hostname }));
-      }
-    };
-
-    ws.onerror = () => setZapStatus("error");
-    ws.onclose = () => {
-      setTimeout(() => {
-        if (wsRef.current?.readyState === WebSocket.CLOSED) setZapStatus("connecting");
-      }, 3000);
-    };
-
-    return () => ws.close();
-  }, []);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -121,11 +65,16 @@ export default function LoginPage() {
     }
   };
 
-  // QR code URL
-  const qrData = zapSession
-    ? JSON.stringify({ v: 1, s: zapSession, d: typeof window !== "undefined" ? window.location.hostname : "iotpush.com", r: ZAP_RELAY })
-    : null;
-  const qrUrl = qrData ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}` : null;
+  // Handle Zap credentials
+  const handleZapCredentials = (zapEmail: string, zapPassword: string) => {
+    setEmail(zapEmail);
+    setPassword(zapPassword);
+    setTimeout(() => {
+      document.getElementById("login-form")?.dispatchEvent(
+        new Event("submit", { cancelable: true, bubbles: true })
+      );
+    }, 500);
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
@@ -206,36 +155,8 @@ export default function LoginPage() {
           </div>
 
           {/* Right: Zap QR Code */}
-          <div className="lg:w-72 bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col items-center justify-center">
-            <h3 className="text-lg font-semibold text-white mb-2">Scan to Login</h3>
-            <p className="text-gray-400 text-sm text-center mb-4">
-              Use your phone to sign in instantly
-            </p>
-
-            <div className="bg-white p-3 rounded-xl">
-              {qrUrl ? (
-                <img src={qrUrl} alt="Scan with Zap" width={180} height={180} className="rounded-lg" />
-              ) : (
-                <div className="w-[180px] h-[180px] flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 flex items-center gap-2 text-gray-400 text-sm">
-              <Smartphone className="w-4 h-4" />
-              <span>
-                Open <span className="text-orange-400 font-medium">Zap</span> app
-              </span>
-            </div>
-
-            <div className="mt-2 text-xs">
-              {zapStatus === "connecting" && <span className="text-yellow-500">● Connecting...</span>}
-              {zapStatus === "ready" && <span className="text-green-500">● Ready to scan</span>}
-              {zapStatus === "connected" && <span className="text-green-500">📱 Phone connected</span>}
-              {zapStatus === "filled" && <span className="text-green-500">✓ Credentials received!</span>}
-              {zapStatus === "error" && <span className="text-red-500">● Connection failed</span>}
-            </div>
+          <div className="lg:w-72 bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <ZapQR onCredentials={handleZapCredentials} accentColor="#f97316" />
           </div>
         </div>
 
