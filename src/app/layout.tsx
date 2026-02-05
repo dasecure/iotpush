@@ -16,6 +16,27 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'IoTPush',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web, iOS, Android',
+  description: 'Send push notifications, emails, and webhooks from any device with a single HTTP request. Works with Raspberry Pi, Arduino, ESP32.',
+  url: 'https://iotpush.com',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free plan with 1,000 pushes/month',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'DaSecure Solutions LLC',
+    url: 'https://dasecure.com',
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +44,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
   );
