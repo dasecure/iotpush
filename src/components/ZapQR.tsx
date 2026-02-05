@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Smartphone, ExternalLink } from "lucide-react";
 
-const ZAP_RELAY = "wss://zap.passqr.com";
+const ZAP_RELAY = "wss://relay.zapqr.ai";
 const APP_STORE_URL = "https://apps.apple.com/app/zap-passqr/id6740000000"; // Update with real App Store ID
 
 interface ZapQRProps {
@@ -109,7 +109,7 @@ export default function ZapQR({ onCredentials, accentColor = "#8b5cf6" }: ZapQRP
     setTimeout(() => {
       if (Date.now() - start < 2000) {
         // Page didn't navigate away, app not installed
-        if (confirm("Zap app not installed. Open App Store to download?")) {
+        if (confirm("ZapQR app not installed. Open App Store to download?")) {
           window.location.href = APP_STORE_URL;
         }
       }
@@ -127,11 +127,11 @@ export default function ZapQR({ onCredentials, accentColor = "#8b5cf6" }: ZapQRP
   return (
     <div className="flex flex-col items-center justify-center text-center">
       <h3 className="text-lg font-semibold text-white mb-2">
-        {isMobile ? "⚡ Open in Zap" : "Scan to Login"}
+        {isMobile ? "⚡ Open in ZapQR" : "Scan to Login"}
       </h3>
       <p className="text-gray-400 text-sm mb-4">
         {isMobile
-          ? "Double-tap to open the Zap app"
+          ? "Double-tap to open the ZapQR app"
           : "Use your phone to sign in instantly"}
       </p>
 
@@ -167,7 +167,7 @@ export default function ZapQR({ onCredentials, accentColor = "#8b5cf6" }: ZapQRP
       <div className="mt-4 flex items-center gap-2 text-gray-400 text-sm">
         <Smartphone className="w-4 h-4" />
         <span>
-          Open <span style={{ color: accentColor }} className="font-medium">Zap</span> app
+          Open <span style={{ color: accentColor }} className="font-medium">ZapQR</span> app
         </span>
       </div>
 
@@ -185,7 +185,7 @@ export default function ZapQR({ onCredentials, accentColor = "#8b5cf6" }: ZapQRP
           className="mt-4 px-4 py-2 rounded-lg text-white font-medium text-sm transition"
           style={{ backgroundColor: accentColor }}
         >
-          Open Zap App
+          Open ZapQR App
         </button>
       )}
     </div>
