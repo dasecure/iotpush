@@ -159,6 +159,69 @@ http.end();`}</pre>
         </section>
 
         <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Pushover Compatibility</h2>
+          <p className="text-gray-400 mb-4">
+            iotpush provides a Pushover-compatible API endpoint. Apps and services with built-in Pushover support can use iotpush as a drop-in replacement.
+          </p>
+          
+          <h4 className="font-medium mb-2">Endpoint</h4>
+          <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
+            <code className="text-orange-400">POST https://iotpush.com/api/1/messages.json</code>
+            <p className="text-gray-500 text-sm mt-1">or: POST https://iotpush.com/api/pushover</p>
+          </div>
+
+          <h4 className="font-medium mb-2">Parameter Mapping</h4>
+          <table className="w-full text-sm mb-6">
+            <thead>
+              <tr className="text-left border-b border-gray-800">
+                <th className="py-2">Pushover Param</th>
+                <th className="py-2">iotpush Mapping</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-400">
+              <tr className="border-b border-gray-800">
+                <td className="py-2 font-mono">token</td>
+                <td className="py-2">Your iotpush topic API key</td>
+              </tr>
+              <tr className="border-b border-gray-800">
+                <td className="py-2 font-mono">user</td>
+                <td className="py-2">Topic name (optional if token is unique)</td>
+              </tr>
+              <tr className="border-b border-gray-800">
+                <td className="py-2 font-mono">message</td>
+                <td className="py-2">Notification message</td>
+              </tr>
+              <tr className="border-b border-gray-800">
+                <td className="py-2 font-mono">title</td>
+                <td className="py-2">Notification title</td>
+              </tr>
+              <tr className="border-b border-gray-800">
+                <td className="py-2 font-mono">url</td>
+                <td className="py-2">Click URL</td>
+              </tr>
+              <tr className="border-b border-gray-800">
+                <td className="py-2 font-mono">priority</td>
+                <td className="py-2">-2 to 2 → lowest/low/normal/high/urgent</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h4 className="font-medium mb-2">Example (curl)</h4>
+          <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm mb-4">
+            <p>curl -s \</p>
+            <p>  --form-string "token=YOUR_TOPIC_API_KEY" \</p>
+            <p>  --form-string "user=my-topic" \</p>
+            <p>  --form-string "message=Hello from Pushover-compatible API!" \</p>
+            <p>  https://iotpush.com/api/1/messages.json</p>
+          </div>
+
+          <h4 className="font-medium mb-2">Migration from Pushover</h4>
+          <p className="text-gray-400 text-sm mb-4">
+            For apps with Pushover integration, simply change the API URL from <code className="text-orange-400">api.pushover.net</code> to <code className="text-orange-400">iotpush.com</code> and use your iotpush topic API key as the token.
+          </p>
+        </section>
+
+        <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Rate Limits</h2>
           <table className="w-full text-sm">
             <thead>
