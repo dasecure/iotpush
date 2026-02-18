@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { PLAN_LIMITS, type PlanName } from "@/lib/stripe";
+import { randomBytes } from "crypto";
+
+function generateApiKey(): string {
+  return randomBytes(16).toString("hex");
+}
 
 // GET /api/topics — List user's topics
 export async function GET() {
@@ -121,6 +126,7 @@ export async function POST(request: NextRequest) {
         name: sanitized,
         description: description || null,
         is_private: is_private || false,
+        api_key: generateApiKey(),
       })
       .select()
       .single();
