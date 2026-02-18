@@ -414,6 +414,334 @@ curl -d "Hello World!" https://www.iotpush.com/api/push/my-topic`}
           </div>
         </section>
 
+        {/* Pushover-Compatible Section Header */}
+        <section className="mb-8">
+          <div className="text-center">
+            <div className="inline-block bg-green-500/10 border border-green-500/20 rounded-full px-4 py-1 text-green-400 text-sm mb-4">
+              Drop-in Pushover replacement
+            </div>
+            <h2 className="text-3xl font-bold mb-3">Pushover-Compatible Integrations</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              These apps have built-in Pushover support. Just change the API URL to iotpush and use your topic API key.
+            </p>
+          </div>
+        </section>
+
+        {/* Sonarr / Radarr / Lidarr */}
+        <section className="mb-16">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded flex items-center justify-center text-white font-bold text-sm">*arr</div>
+              <div>
+                <h2 className="text-2xl font-bold">Sonarr / Radarr / Lidarr</h2>
+                <p className="text-gray-400 text-sm">Media automation for TV, movies, and music</p>
+              </div>
+            </div>
+
+            <p className="text-gray-300 mb-6">
+              All *arr apps have native Pushover support. Configure iotpush as a custom Pushover server.
+            </p>
+
+            <h3 className="text-lg font-semibold mb-3">Setup Steps</h3>
+            <ol className="list-decimal list-inside text-gray-300 space-y-2 mb-6">
+              <li>Go to <strong>Settings → Connect → Add → Pushover</strong></li>
+              <li>Click the wrench icon to access advanced settings</li>
+              <li>Set <strong>Server</strong> to: <code className="text-orange-400 bg-gray-800 px-2 py-0.5 rounded">https://iotpush.com</code></li>
+              <li>Set <strong>API Key</strong> to your iotpush topic API key</li>
+              <li>Set <strong>User Key</strong> to your topic name (e.g., <code className="text-orange-400">sonarr-alerts</code>)</li>
+              <li>Test and save!</li>
+            </ol>
+
+            <CopyBlock
+              language="Sonarr/Radarr Connection Settings"
+              code={`Name:      iotpush
+Server:    https://iotpush.com
+API Key:   your-topic-api-key-here
+User Key:  your-topic-name
+
+Triggers:  ✓ On Grab  ✓ On Download  ✓ On Upgrade  ✓ On Health Issue`}
+            />
+
+            <p className="text-gray-500 text-sm mt-3">
+              💡 Works the same for Sonarr, Radarr, Lidarr, Readarr, and Prowlarr.
+            </p>
+          </div>
+        </section>
+
+        {/* Prometheus / Grafana */}
+        <section className="mb-16">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="white">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Prometheus Alertmanager</h2>
+                <p className="text-gray-400 text-sm">Metrics alerting for Kubernetes and beyond</p>
+              </div>
+            </div>
+
+            <p className="text-gray-300 mb-6">
+              Alertmanager supports Pushover natively. Configure iotpush as the receiver.
+            </p>
+
+            <h3 className="text-lg font-semibold mb-3">alertmanager.yml</h3>
+
+            <CopyBlock
+              language="yaml"
+              code={`receivers:
+  - name: 'iotpush'
+    pushover_configs:
+      - user_key: 'your-topic-name'
+        token: 'your-topic-api-key'
+        # Override Pushover URL to use iotpush
+        http_config:
+          proxy_url: ''
+        # Custom API URL (requires Alertmanager 0.25+)
+        api_url: 'https://iotpush.com/api/1/messages.json'
+        
+        title: '{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}'
+        message: '{{ .CommonAnnotations.summary }}'
+        priority: '{{ if eq .Status "firing" }}1{{ else }}0{{ end }}'
+
+route:
+  receiver: 'iotpush'
+  group_by: ['alertname']
+  group_wait: 30s`}
+            />
+
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mt-4">
+              <p className="text-yellow-300 text-sm">
+                <strong>Note:</strong> If your Alertmanager version doesn&apos;t support <code>api_url</code>, use a webhook receiver instead pointing to <code>https://iotpush.com/api/push/your-topic</code>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* UptimeRobot / Healthchecks.io */}
+        <section className="mb-16">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded flex items-center justify-center text-white font-bold text-sm">✓</div>
+              <div>
+                <h2 className="text-2xl font-bold">UptimeRobot / Healthchecks.io</h2>
+                <p className="text-gray-400 text-sm">Uptime and cron job monitoring</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-3">UptimeRobot</h3>
+                <ol className="list-decimal list-inside text-gray-300 space-y-2 text-sm">
+                  <li>Go to <strong>My Settings → Alert Contacts</strong></li>
+                  <li>Add new contact → <strong>Pushover</strong></li>
+                  <li>API Token: your iotpush topic API key</li>
+                  <li>User Key: your topic name</li>
+                  <li>For the server URL, use webhook instead with: <code className="text-orange-400 text-xs">https://iotpush.com/api/push/your-topic</code></li>
+                </ol>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Healthchecks.io</h3>
+                <ol className="list-decimal list-inside text-gray-300 space-y-2 text-sm">
+                  <li>Go to <strong>Integrations → Pushover</strong></li>
+                  <li>Since healthchecks.io doesn&apos;t allow custom URLs, use <strong>Webhook</strong> instead</li>
+                  <li>URL: <code className="text-orange-400 text-xs">https://iotpush.com/api/push/your-topic</code></li>
+                  <li>Method: POST</li>
+                  <li>Add header: <code className="text-orange-400 text-xs">Authorization: Bearer YOUR_API_KEY</code></li>
+                </ol>
+              </div>
+            </div>
+
+            <CopyBlock
+              language="Webhook URL for monitoring services"
+              code={`POST https://iotpush.com/api/push/uptime-alerts
+
+Headers:
+  Authorization: Bearer your-topic-api-key
+  Content-Type: application/json
+
+Body:
+{
+  "title": "$MONITORNAME is $ALERTTYPE",
+  "message": "$MONITORURL - $ALERTDETAIL",
+  "priority": "high"
+}`}
+            />
+          </div>
+        </section>
+
+        {/* SABnzbd / Downloaders */}
+        <section className="mb-16">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded flex items-center justify-center text-white font-bold text-sm">↓</div>
+              <div>
+                <h2 className="text-2xl font-bold">SABnzbd / qBittorrent / Transmission</h2>
+                <p className="text-gray-400 text-sm">Download managers and torrent clients</p>
+              </div>
+            </div>
+
+            <h3 className="text-lg font-semibold mb-3">SABnzbd</h3>
+            <ol className="list-decimal list-inside text-gray-300 space-y-2 mb-6">
+              <li>Go to <strong>Config → Notifications</strong></li>
+              <li>Enable Pushover notifications</li>
+              <li>API Key: your iotpush topic API key</li>
+              <li>User Key: your topic name</li>
+              <li>SABnzbd doesn&apos;t allow custom URLs, so use the script method below</li>
+            </ol>
+
+            <h3 className="text-lg font-semibold mb-3">Post-Processing Script (Universal)</h3>
+            <CopyBlock
+              language="bash"
+              code={`#!/bin/bash
+# save as: iotpush-notify.sh
+# Add to your download client's post-processing scripts
+
+TOPIC="downloads"
+API_KEY="your-topic-api-key"
+TITLE="Download Complete"
+MESSAGE="$1 has finished downloading"
+
+curl -s -X POST "https://iotpush.com/api/push/$TOPIC" \\
+  -H "Authorization: Bearer $API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d "{\\"title\\": \\"$TITLE\\", \\"message\\": \\"$MESSAGE\\"}"
+`}
+            />
+
+            <p className="text-gray-500 text-sm mt-3">
+              💡 Works with any download client that supports post-processing scripts.
+            </p>
+          </div>
+        </section>
+
+        {/* openHAB / Domoticz */}
+        <section className="mb-16">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-8">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-500 rounded flex items-center justify-center">
+                <Home className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">openHAB / Domoticz</h2>
+                <p className="text-gray-400 text-sm">Open-source home automation platforms</p>
+              </div>
+            </div>
+
+            <h3 className="text-lg font-semibold mb-3">openHAB (pushover binding)</h3>
+            <CopyBlock
+              language="text"
+              code={`# In services/pushover.cfg, openHAB's Pushover binding 
+# doesn't support custom URLs. Use HTTP binding instead:
+
+# things/http.things
+Thing http:url:iotpush "iotpush" [
+    baseURL="https://iotpush.com/api/push/home-alerts",
+    authMode="BASIC",
+    username="",
+    password="your-topic-api-key"
+]
+
+# rules/notify.rules
+rule "Motion Alert"
+when
+    Item MotionSensor changed to ON
+then
+    sendHttpPostRequest(
+        "https://iotpush.com/api/push/home-alerts",
+        "application/json",
+        '{"title":"Motion","message":"Motion detected!","priority":"high"}',
+        newHashMap("Authorization" -> "Bearer YOUR_API_KEY")
+    )
+end`}
+            />
+
+            <h3 className="text-lg font-semibold mb-3 mt-6">Domoticz</h3>
+            <CopyBlock
+              language="text"
+              code={`# Setup → Settings → Notifications → Pushover
+
+# Domoticz doesn't support custom Pushover URLs.
+# Use Custom HTTP/Action instead:
+
+# Setup → More Options → Events → Create dzVents script:
+
+return {
+    on = { devices = { 'Motion Sensor' } },
+    execute = function(domoticz, device)
+        if device.state == 'On' then
+            domoticz.openURL({
+                url = 'https://iotpush.com/api/push/domoticz',
+                method = 'POST',
+                headers = { 
+                    ['Authorization'] = 'Bearer YOUR_API_KEY',
+                    ['Content-Type'] = 'application/json'
+                },
+                postData = {
+                    title = 'Motion Alert',
+                    message = device.name .. ' triggered',
+                    priority = 'high'
+                }
+            })
+        end
+    end
+}`}
+            />
+          </div>
+        </section>
+
+        {/* Generic Migration Guide */}
+        <section className="mb-16">
+          <div className="bg-gradient-to-br from-green-900/20 to-gray-900/60 border border-green-500/20 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-4 text-center">🔄 Migrating from Pushover?</h2>
+            <p className="text-gray-300 text-center mb-6 max-w-2xl mx-auto">
+              For any app with Pushover support, the migration is simple:
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-gray-800/60 rounded-lg p-4 text-center">
+                <div className="text-3xl mb-2">1️⃣</div>
+                <h4 className="font-semibold mb-1">Change URL</h4>
+                <p className="text-gray-400 text-sm">
+                  <code className="text-red-400 line-through">api.pushover.net</code><br />
+                  <code className="text-green-400">iotpush.com</code>
+                </p>
+              </div>
+              <div className="bg-gray-800/60 rounded-lg p-4 text-center">
+                <div className="text-3xl mb-2">2️⃣</div>
+                <h4 className="font-semibold mb-1">Use Topic API Key</h4>
+                <p className="text-gray-400 text-sm">
+                  Your iotpush topic API key<br />goes in the <code className="text-orange-400">token</code> field
+                </p>
+              </div>
+              <div className="bg-gray-800/60 rounded-lg p-4 text-center">
+                <div className="text-3xl mb-2">3️⃣</div>
+                <h4 className="font-semibold mb-1">Topic Name</h4>
+                <p className="text-gray-400 text-sm">
+                  Your topic name goes in<br />the <code className="text-orange-400">user</code> field
+                </p>
+              </div>
+            </div>
+
+            <CopyBlock
+              language="Pushover → iotpush Migration"
+              code={`# Before (Pushover)
+curl -s --form-string "token=PUSHOVER_APP_TOKEN" \\
+       --form-string "user=PUSHOVER_USER_KEY" \\
+       --form-string "message=Hello" \\
+       https://api.pushover.net/1/messages.json
+
+# After (iotpush) — just change URL and credentials!
+curl -s --form-string "token=YOUR_IOTPUSH_TOPIC_API_KEY" \\
+       --form-string "user=your-topic-name" \\
+       --form-string "message=Hello" \\
+       https://iotpush.com/api/1/messages.json`}
+            />
+          </div>
+        </section>
+
         {/* Coming Soon */}
         <section className="mb-16">
           <div className="bg-gradient-to-br from-orange-900/20 to-gray-900/60 border border-orange-500/20 rounded-2xl p-8 text-center">
