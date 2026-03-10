@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Bell, Cpu, Zap, Shield, Terminal, ArrowRight, Smartphone, Layers } from "lucide-react";
-import PricingSection from "@/components/PricingSection";
 import Navbar from "@/components/Navbar";
 
 export default function Home() {
@@ -190,9 +189,6 @@ requests.post(
           </div>
         </div>
       </section>
-
-      {/* Pricing */}
-      <PricingSection />
 
       {/* CTA */}
       <section className="py-20 px-6 bg-gray-900/50">
